@@ -1,4 +1,4 @@
-print('test1')
+print('testgithubedits')
 from funcf import *
 SSID = "pldt fiber deco"  
 PASSWORD = "Coconutgrove420!!"
