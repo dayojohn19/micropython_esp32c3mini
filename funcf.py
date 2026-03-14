@@ -1,17 +1,14 @@
 import network
 import urequests
 import time
-
+import os
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
-
-
-
 def connect_wifi(ssid_val, pass_val):
     print("Scanning...")
     for net in wlan.scan():
         print("SSID:", net[0].decode(), "RSSI:", net[3], "CH:", net[2])
-    print('Connecting to: {ssid_val} \n')
+    print(f"Connecting to: {ssid_val}\n")
     w = network.WLAN(network.STA_IF)
     if w.isconnected():
         return True
@@ -28,8 +25,6 @@ def connect_wifi(ssid_val, pass_val):
     w.active(False)
     print("\nFail")
     return False
-
-
 def url_request(url=None, method="GET", params=None, data=None, headers=None, retries=5, timeout=5):
     if not url:
         url = "https://httpbin.org/ip"
@@ -53,13 +48,57 @@ def url_request(url=None, method="GET", params=None, data=None, headers=None, re
         time.sleep(2)
     return False
 
-def update_file(p, c, m="w"):
+# def update_file(p, c, m="w"):
+#     try:
+#         d = str(c)
+#         with open(p, m, encoding="utf-8") as f:
+#             for i in range(0, len(d), 64 * 1024):
+#                 f.write(d[i:i + 64 * 1024])
+#         return True
+#     except Exception as e:
+#         print("upddd err", e)
+#         return False
+def update_files(files):
+    for filename, details in files.items():
+        file_url = details.get('url')
+        if not file_url:
+            print('Skipping', filename, '- missing url')
+            continue
+
+        print('Updating', filename)
+        if update_file(filename, url=file_url):
+            details['last_update'] = 'ok'
+        else:
+            print('Failed to update', filename)
+
+def update_file(filepath, content=None, url=None):
+    if content is None:
+        content = url_request(url)
+    if content is False or content is None:
+        print("No content for", filepath)
+        return False
+    content = str(content)
+    tmp = filepath + ".tmp"
     try:
-        d = str(c)
-        with open(p, m, encoding="utf-8") as f:
-            for i in range(0, len(d), 64 * 1024):
-                f.write(d[i:i + 64 * 1024])
+        with open(tmp, "w") as f:
+            chunk_size = 8192
+            for i in range(0, len(content), chunk_size):
+                f.write(content[i:i + chunk_size])
+            try:
+                f.flush()
+            except AttributeError:
+                pass
+        try:
+            os.remove(filepath)
+        except OSError:
+            pass
+        os.rename(tmp, filepath)
+        print("Updated:", filepath)
         return True
     except Exception as e:
-        print("upddd err", e)
+        print("update_file_safe error:", e)
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
         return False
