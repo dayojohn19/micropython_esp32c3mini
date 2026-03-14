@@ -5,12 +5,13 @@ import time
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
 
-print("Scanning...")
-for net in wlan.scan():
-    print("SSID:", net[0].decode(), "RSSI:", net[3], "CH:", net[2])
 
 
 def connect_wifi(ssid_val, pass_val):
+    print("Scanning...")
+    for net in wlan.scan():
+        print("SSID:", net[0].decode(), "RSSI:", net[3], "CH:", net[2])
+    print('Connecting to: {ssid_val} \n')
     w = network.WLAN(network.STA_IF)
     if w.isconnected():
         return True
